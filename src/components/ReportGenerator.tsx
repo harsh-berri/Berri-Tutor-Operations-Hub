@@ -412,19 +412,72 @@ export default function ReportGenerator() {
               </div>
             </label>
 
+            {/* Personalised Syllabus — PDF / Excel / Both */}
+            <label onClick={() => {
+              if (!config.genProgress) return;
+              const nowActive = config.genIndividual || config.genPersonalizedExcel;
+              setConfig(prev => ({
+                ...prev,
+                genIndividual: !nowActive,
+                genPersonalizedExcel: false,
+                individualFormat: "pdf",
+              }));
+            }} style={{ cursor: config.genProgress ? "pointer" : "not-allowed", opacity: config.genProgress ? 1 : 0.38, display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 16px", borderRadius: 10, background: (config.genIndividual || config.genPersonalizedExcel) ? "rgba(16,185,129,0.07)" : "rgba(255,255,255,0.02)", border: `1px solid ${(config.genIndividual || config.genPersonalizedExcel) ? "rgba(16,185,129,0.25)" : "rgba(255,255,255,0.07)"}`, transition: "all 0.2s" }}>
+              <div style={{ marginTop: 2, width: 17, height: 17, borderRadius: 5, border: `2px solid ${(config.genIndividual || config.genPersonalizedExcel) ? "#10b981" : "rgba(255,255,255,0.18)"}`, background: (config.genIndividual || config.genPersonalizedExcel) ? "#10b981" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+                {(config.genIndividual || config.genPersonalizedExcel) && <CheckCircle2 style={{ width: 11, height: 11, color: "#fff" }} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--c-text)" }}>Personalised Syllabus</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 9999, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b" }}>
+                    {config.individualFormat === "both" ? "PDF + XLS" : config.individualFormat === "excel" ? "XLS" : "PDF"} ZIP
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--c-text-muted)", lineHeight: 1.5 }}>Individual reports with personalised study plans — PDF, Excel or both</div>
+                {(config.genIndividual || config.genPersonalizedExcel) && (
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10, paddingLeft: 12, borderLeft: "2px solid rgba(16,185,129,0.2)" }} onClick={e => e.stopPropagation()}>
+                    {/* Format toggle */}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {(["pdf", "excel", "both"] as const).map(fmt => (
+                        <button key={fmt} onClick={() => setConfig(prev => ({
+                          ...prev,
+                          individualFormat: fmt,
+                          genIndividual: fmt === "pdf" || fmt === "both",
+                          genPersonalizedExcel: fmt === "excel" || fmt === "both",
+                        }))} style={{ padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", border: `1px solid ${config.individualFormat === fmt ? "rgba(16,185,129,0.5)" : "rgba(255,255,255,0.1)"}`, background: config.individualFormat === fmt ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)", color: config.individualFormat === fmt ? "#10b981" : "var(--c-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", transition: "all 0.2s" }}>
+                          {fmt === "pdf" ? "📄 PDF" : fmt === "excel" ? "📊 Excel" : "🗂️ Both"}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Candidate filter */}
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--c-text-muted)", cursor: "pointer" }}>
+                      <input type="radio" checked={config.individualCondition === "all"} onChange={() => setConfig({...config, individualCondition: "all"})} style={{ accentColor: "#10b981" }}/> All candidates
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--c-text-muted)", cursor: "pointer" }}>
+                        <input type="radio" checked={config.individualCondition === "progress>"} onChange={() => setConfig({...config, individualCondition: "progress>"})} style={{ accentColor: "#10b981" }}/> Progress &gt;
+                      </label>
+                      <input type="number" disabled={config.individualCondition !== "progress>"} value={config.progressThreshold} onChange={e => setConfig({...config, progressThreshold: Number(e.target.value)})} style={{ width: 54, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 8px", fontSize: 12, color: "#fff", outline: "none" }} />
+                      <span style={{ fontSize: 12, color: "var(--c-text-faint)" }}>%</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </label>
+
           </div>
         </div>
 
         {/* Execute Button */}
         <button
           onClick={generateReport}
-          disabled={isProcessing || !candidates.length || (!config.genProgress && !config.genSummary)}
+          disabled={isProcessing || !candidates.length || (!config.genProgress && !config.genSummary && !config.genIndividual && !config.genPersonalizedExcel)}
           style={{
             width: "100%", padding: "14px 24px", borderRadius: 12, fontSize: 14, fontWeight: 700,
-            background: (isProcessing || !candidates.length || (!config.genProgress && !config.genSummary))
+            background: (isProcessing || !candidates.length || (!config.genProgress && !config.genSummary && !config.genIndividual && !config.genPersonalizedExcel))
               ? "rgba(16,185,129,0.25)" : "linear-gradient(135deg, #10b981, #059669)",
             color: "#fff", border: "none",
-            cursor: (isProcessing || !candidates.length || (!config.genProgress && !config.genSummary)) ? "not-allowed" : "pointer",
+            cursor: (isProcessing || !candidates.length || (!config.genProgress && !config.genSummary && !config.genIndividual && !config.genPersonalizedExcel)) ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             boxShadow: isProcessing ? "none" : "0 8px 24px rgba(16,185,129,0.25)",
             transition: "all 0.2s",
